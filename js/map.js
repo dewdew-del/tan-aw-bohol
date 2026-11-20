@@ -155,7 +155,8 @@ async function showRoute(from, to) {
       L.polyline(route.coords, { color: '#0e7c86', weight: 5, interactive: false }),
     ]).addTo(map);
     const card = $('detail').offsetWidth, side = map.getSize().x - card > 200;
-    map.fitBounds(L.latLngBounds(route.coords), { paddingTopLeft: [side ? card + 30 : 30, 30], paddingBottomRight: [30, 30] });
+    const list = getComputedStyle(document.querySelector('.tools')).position === 'absolute' ? 350 : 30; // floating spot list on the right
+    map.fitBounds(L.latLngBounds(route.coords), { paddingTopLeft: [side ? card + 30 : 30, 30], paddingBottomRight: [list, 30] });
     box.innerHTML = `<p class="route-sum"><b>${route.km} km</b> · about ${formatDuration(route.min)} by car</p>
       <p class="note">Estimated route from OpenStreetMap roads, without live traffic. For the drive, use <b>Start navigation</b> and follow road signs and local advice.</p>`;
   } catch {
