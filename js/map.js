@@ -97,7 +97,7 @@ function renderDetail(s) {
       <p class="lede">${s.desc.split('. ')[0].replace(/\.$/, '')}.</p>
       <dl class="specs">
         ${km != null ? `<div><dt>Distance</dt><dd>${Math.round(km)} km <small>from ${from.name.replace(' City', '')}</small></dd></div>` : ''}
-        <div><dt>Rain today</dt><dd id="rain-val" aria-live="polite">…</dd></div>
+        <div><dt>Chance of rain today</dt><dd id="rain-val" aria-live="polite">…</dd></div>
       </dl>
       <div class="cta-row">
         ${km != null ? `<a class="btn-solid" target="_blank" rel="noopener" href="${navLink(me ? null : from, s)}">Navigate</a>
