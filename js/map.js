@@ -65,9 +65,16 @@ $('list').addEventListener('click', e => {
 });
 
 // ---------- header: slides away while the map is being moved, back on demand ----------
-const showHeader = () => document.body.classList.remove('nav-hidden');
-const hideHeader = () => document.body.classList.add('nav-hidden');
-map.on('dragstart', hideHeader);
+let headerTimer;
+const showHeader = () => { clearTimeout(headerTimer); document.body.classList.remove('nav-hidden'); };
+// hide while the visitor moves the map; come back 1.2 s after they stop (each new move restarts the wait)
+const hideHeader = () => {
+  document.body.classList.add('nav-hidden');
+  clearTimeout(headerTimer); headerTimer = setTimeout(showHeader, 1200);
+};
+map.on('dragstart drag', hideHeader);
+// a zoom or swipe can keep gliding after the finger lifts: restart the wait when it settles
+map.on('moveend', () => { if (document.body.classList.contains('nav-hidden')) hideHeader(); });
 map.getContainer().addEventListener('wheel', hideHeader, { passive: true });
 map.getContainer().addEventListener('touchmove', hideHeader, { passive: true });
 addEventListener('mousemove', e => { if (e.clientY < 70) showHeader(); });
