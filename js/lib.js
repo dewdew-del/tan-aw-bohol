@@ -54,15 +54,14 @@ export function parsePoint(str) {
   return { lat, lon };
 }
 
-// OpenRouteService GeoJSON -> {coords: [[lat, lon]...], km, min}
-export function parseOrsRoute(geo) {
-  const f = geo?.features?.[0];
-  if (!f) return null;
-  const { distance, duration } = f.properties.summary;
+// GraphHopper route (points_encoded=false) -> {coords: [[lat, lon]...], km, min}
+export function parseGhRoute(gh) {
+  const p = gh?.paths?.[0];
+  if (!p) return null;
   return {
-    coords: f.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
-    km: Math.round(distance / 100) / 10,
-    min: Math.round(duration / 60),
+    coords: p.points.coordinates.map(([lon, lat]) => [lat, lon]),
+    km: Math.round(p.distance / 100) / 10,
+    min: Math.round(p.time / 60000),
   };
 }
 

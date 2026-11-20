@@ -137,7 +137,7 @@ function renderDetail(s) {
   loadRain(s).then(sum => { if (selected === s) $('rain-box').innerHTML = rainHtml(sum); });
 }
 
-// ---------- route preview (OpenRouteService via /api/route) ----------
+// ---------- route preview (GraphHopper via /api/route) ----------
 let routeLayer = null;
 function clearRoute() { routeLayer?.remove(); routeLayer = null; }
 

@@ -8,7 +8,7 @@ An interactive tourism and cultural heritage map of Bohol, Philippines.
 - **Illustrated map** of 28 tourist and heritage spots (Leaflet, island outlines from OpenStreetMap), with icon pins, search and category filters
 - **Chance of rain** for each spot for the next 12 hours (Open-Meteo, no API key)
 - **My location (GPS, asked automatically when the site opens):** blue dot, nearest spots, distances from where you stand, and a warning when rain is likely near you in the next 3 hours. Your location stays in your browser.
-- **Directions:** each spot has *Show route* (road route, distance and drive time on the map, from OpenRouteService) and *Start navigation* (opens Google Maps for live turn-by-turn). Zoom in close to see real streets.
+- **Directions:** each spot has *Show route* (road route, distance and drive time on the map, from GraphHopper, OpenStreetMap roads) and *Start navigation* (opens Google Maps for live turn-by-turn). Zoom in close to see real streets.
 - **360° walk-throughs:** walk around selected spots by clicking arrows between 360° photos (Pannellum). Baclayon Church has a demo walk with placeholder images.
 
 BSCS 3B — Bohol Island State University.
@@ -31,8 +31,8 @@ npm test
 See [TOURS.md](TOURS.md).
 
 ## Routing key (for Show route)
-1. Sign up free at https://openrouteservice.org/dev/#/signup and copy your API key.
-2. In Vercel: Project → Settings → Environment Variables → add `ORS_API_KEY` = your key, then redeploy.
+1. Sign up free at https://graphhopper.com/dashboard/#/signup, then open **API Keys** in the dashboard and copy your key.
+2. In Vercel: Project → Settings → Environment Variables → add `GRAPHHOPPER_API_KEY` = your key, then redeploy.
 
 The key stays on the server (`api/route.js`); the page never sees it. Without a key, *Show route* says it's unavailable and *Start navigation* still works. Locally, `python -m http.server` can't run the route function; use `npx vercel dev` with the key in a `.env.local` file to test it.
 
