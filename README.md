@@ -6,7 +6,7 @@ An interactive tourism and cultural heritage map of Bohol, Philippines.
 
 - **Map** of 28 tourist and heritage spots (OpenStreetMap + Leaflet), with search and category filters
 - **Chance of rain** for each spot for the next 12 hours (Open-Meteo, no API key)
-- **My location (GPS):** blue dot, nearest spots, distances from where you stand, and a warning when rain is likely near you in the next 3 hours. Your location stays in your browser.
+- **My location (GPS, asked automatically when the site opens):** blue dot, nearest spots, distances from where you stand, and a warning when rain is likely near you in the next 3 hours. Your location stays in your browser.
 - **360° walk-throughs:** walk around selected spots by clicking arrows between 360° photos (Pannellum). Baclayon Church has a demo walk with placeholder images.
 
 BSCS 3B — Bohol Island State University.

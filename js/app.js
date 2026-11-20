@@ -154,22 +154,19 @@ function rainHtml(sum) {
 
 // ---------- GPS ----------
 let meMarker = null, watchId = null, lastRainCheck = 0;
-$('locate').addEventListener('click', () => {
-  if (!('geolocation' in navigator)) return toast('Your browser does not support location.');
-  if (watchId != null) { if (me) map.flyTo([me.lat, me.lon], 13); return; }
-  $('locate').textContent = '📍 Finding you…';
+// Ask for location as soon as the page opens; the browser shows its own permission prompt.
+if ('geolocation' in navigator) {
   watchId = navigator.geolocation.watchPosition(onPosition, err => {
+    if (err.code === 3 && me) return; // brief GPS timeout after a fix: keep the last position
     navigator.geolocation.clearWatch(watchId); watchId = null;
-    $('locate').textContent = '📍 Show my location';
-    toast(err.code === 1 ? 'Location is blocked. Allow it in your browser settings to see where you are.'
-      : 'Could not find your location. Try again outside or with GPS on.');
+    toast(err.code === 1 ? 'Location is off. Allow it in your browser settings to see where you are and rain near you.'
+      : 'Could not find your location. Turn on GPS and reload the page.');
   }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
-});
+}
 
 function onPosition(pos) {
   const first = !me;
   me = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-  $('locate').textContent = '📍 My location';
   if (!meMarker) {
     meMarker = L.marker([me.lat, me.lon], { icon: L.divIcon({ className: '', html: '<div class="me-dot"></div>', iconSize: [16, 16] }), zIndexOffset: 1000 })
       .addTo(map).bindTooltip('You are here');
