@@ -197,7 +197,7 @@ label { font-size: .85rem; color: var(--muted); display: grid; gap: 4px; }
 .pop-head .kicker { font: 600 .72rem var(--font-body); letter-spacing: .18em; text-transform: uppercase; color: #f6c36a; }
 .pop-head h3 { font: 700 clamp(1.6rem, 4vw, 2.1rem)/1.05 var(--font-head); color: #fff; }
 .drawer .body { padding: 22px 26px 24px; gap: 18px; }
-.lede { font-size: 1.05rem; line-height: 1.55; color: #33454a; }
+.drawer .lede { font-size: 1.05rem; line-height: 1.55; color: #33454a; }
 .specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .specs div { padding: 12px 0; }
 .specs div + div { border-left: 1px solid var(--line); padding-left: 18px; }
