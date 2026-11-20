@@ -10,7 +10,7 @@ const $ = id => document.getElementById(id);
 
 // ---------- popular places (each opens that spot on the map page) ----------
 $('panels').innerHTML = spots.filter(s => s.img).map(s =>
-  `<a class="ph" href="map.html#${s.id}"><img src="${s.img}" alt="${s.name}" loading="lazy"><span class="cap"><b>${s.name}${tours[s.id] ? '<span class="badge360">360°</span>' : ''}</b><span>${s.desc.split('. ')[0]}.</span></span></a>`).join('');
+  `<a class="ph" href="map.html#${s.id}"><img src="${s.img}" alt="${s.name}" loading="lazy"><span class="cap"><span class="kicker">${s.type}${tours[s.id] ? ' · 360° walk' : ''}</span><b>${s.name}</b><span>${s.desc.split('. ')[0]}.</span></span></a>`).join('');
 
 // ---------- map preview (not draggable; the whole card links to the map page) ----------
 const map = createBoholMap('preview-map', { interactive: false });
