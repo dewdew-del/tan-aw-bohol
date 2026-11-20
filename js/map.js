@@ -18,7 +18,7 @@ const map = createBoholMap('map');
 map.createPane('route').style.zIndex = 420; // route line above street tiles
 // fit the whole island, leaving room for the floating list panel on wide screens
 const showIsland = (animate = true) => map.fitBounds(islandBounds, {
-  paddingTopLeft: [20, 20],
+  paddingTopLeft: [20, 80], // room for the floating header
   paddingBottomRight: [20, 20],
   animate,
 });
@@ -64,8 +64,18 @@ $('list').addEventListener('click', e => {
   select(spots.find(s => s.id === b.dataset.id), true);
 });
 
+// ---------- header: slides away while the map is being moved, back on demand ----------
+const showHeader = () => document.body.classList.remove('nav-hidden');
+const hideHeader = () => document.body.classList.add('nav-hidden');
+map.on('dragstart', hideHeader);
+map.getContainer().addEventListener('wheel', hideHeader, { passive: true });
+map.getContainer().addEventListener('touchmove', hideHeader, { passive: true });
+addEventListener('mousemove', e => { if (e.clientY < 70) showHeader(); });
+document.querySelector('.top').addEventListener('focusin', showHeader);
+
 // ---------- spot popup (centred over the map; click outside to close) ----------
 function select(s, fly = false) {
+  showHeader();
   selected = s;
   history.replaceState(null, '', '#' + s.id);
   renderDetail(s);

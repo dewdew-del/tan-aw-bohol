@@ -239,3 +239,11 @@ label { font-size: .85rem; color: var(--muted); display: grid; gap: 4px; }
 /* "Open the map" centred at the bottom of the preview */
 .open-map { left: 50%; transform: translateX(-50%); }
 .preview:hover .open-map, .preview:focus-visible .open-map { transform: translateX(-50%); }
+
+/* map page: header floats over the full-screen map and slides away while moving the map */
+.map-page .top { position: fixed; top: 0; left: 0; right: 0; }
+.map-page .banner { position: fixed; top: 59px; left: 0; right: 0; }
+.map-page .wrap { height: 100vh; height: 100dvh; }
+.map-page .tools, .map-page .search-toggle { top: 75px; transition: top .3s ease; }
+.map-page .tools { max-height: calc(100% - 91px); }
+.nav-hidden.map-page .tools, .nav-hidden.map-page .search-toggle { top: 16px; }
