@@ -128,7 +128,7 @@ async function loadRain(p) {
       if (!r.ok) throw new Error(r.status);
       rainCache.set(key, { at: Date.now(), hourly: (await r.json()).hourly });
     } catch {
-      return null;
+      if (!hit) return null; // offline: fall back to the older forecast if we have one
     }
   }
   return rainSummary(rainCache.get(key).hourly, manilaNow());
@@ -190,6 +190,7 @@ function openTour(s) {
   lastFocus = document.activeElement;
   $('pano').hidden = false;
   $('pano-title').textContent = s.name;
+  if (!window.pannellum) { closeTour(); return toast('The 360° viewer could not load. Check your internet and try again.'); }
   viewer = window.pannellum.viewer('pano-view', {
     default: { firstScene: t.firstScene, sceneFadeDuration: 600, autoLoad: true, compass: false },
     scenes: Object.fromEntries(Object.entries(t.scenes).map(([id, sc]) => [id, { ...sc, type: 'equirectangular' }])),
@@ -203,9 +204,9 @@ function openTour(s) {
   $('pano-close').focus();
 }
 function closeTour() {
-  if (!viewer) return;
+  if ($('pano').hidden) return;
   clearInterval(readoutTimer);
-  viewer.destroy(); viewer = null;
+  viewer?.destroy(); viewer = null;
   $('pano').hidden = true;
   lastFocus?.focus();
 }
