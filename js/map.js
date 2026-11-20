@@ -3,7 +3,7 @@ import { spots } from './spots.js';
 import { tours } from './tours.js';
 import { haversineKm, roadKm, shouldWarn, formatDuration, navLink } from './lib.js';
 import { loadRain, rainWarning } from './rain.js';
-import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation, ICONS } from './basemap.js';
+import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation } from './basemap.js';
 
 const L = window.L;
 const $ = id => document.getElementById(id);
@@ -85,23 +85,24 @@ $('backdrop').addEventListener('click', closeDetail);
 function renderDetail(s) {
   const from = fromPoint();
   const km = from && from.id !== s.id ? roadKm(haversineKm(from, s)) : null;
-  const bg = s.img ? `background-image:url('${s.img}')` : 'background-image:linear-gradient(135deg,#0e7c86,#0a4f57)';
+  const bg = s.img ? `background-image:linear-gradient(180deg,rgba(10,30,34,0) 40%,rgba(10,30,34,.78)),url('${s.img}')` : 'background-image:linear-gradient(160deg,#2c4a3e,#14262b)';
   $('detail').hidden = $('backdrop').hidden = false;
   $('detail').innerHTML = `
     <button class="x" id="close-detail" type="button" aria-label="Close">&times;</button>
-    <div class="ph2${s.img ? '' : ' no-photo'}" style="${bg}">${s.img ? '' : `<span>${ICONS[s.type] || '📍'}</span>`}</div>
-    <div class="body">
-      <span class="tag">${s.type}</span>
+    <header class="pop-head${s.img ? '' : ' plain'}" style="${bg}">
+      <span class="kicker">${s.type}</span>
       <h3>${s.name}</h3>
-      <p>${s.desc.split('. ')[0].replace(/\.$/, '')}.</p>
-      <div class="facts">
-        ${km != null ? `<span>📍 ~${Math.round(km)} km from ${from.name.replace(' City', '')}</span>` : ''}
-        <span id="rain-chip" aria-live="polite">⛅ Checking rain…</span>
-      </div>
-      <div class="actions">
-        ${tours[s.id] ? '<button class="walk" type="button" id="walk">🚶 Walk around 360°</button>' : ''}
-        ${km != null ? `<button class="btn-dir" type="button" id="show-route">🗺️ Show route</button>
-        <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink(me ? null : from, s)}">🧭 Navigate</a>` : ''}
+    </header>
+    <div class="body">
+      <p class="lede">${s.desc.split('. ')[0].replace(/\.$/, '')}.</p>
+      <dl class="specs">
+        ${km != null ? `<div><dt>Distance</dt><dd>${Math.round(km)} km <small>from ${from.name.replace(' City', '')}</small></dd></div>` : ''}
+        <div><dt>Rain, next 3 hrs</dt><dd id="rain-val" aria-live="polite">…</dd></div>
+      </dl>
+      <div class="cta-row">
+        ${km != null ? `<a class="btn-solid" target="_blank" rel="noopener" href="${navLink(me ? null : from, s)}">Navigate</a>
+        <button class="btn-text" type="button" id="show-route">Preview route</button>` : ''}
+        ${tours[s.id] ? '<button class="btn-text" type="button" id="walk">Walk around in 360°</button>' : ''}
       </div>
     </div>`;
   $('close-detail').onclick = closeDetail;
@@ -109,7 +110,7 @@ function renderDetail(s) {
   if (tours[s.id]) $('walk').onclick = () => openTour(s);
   loadRain(s).then(sum => {
     if (selected !== s) return;
-    $('rain-chip').textContent = sum ? `${sum.next3Max >= 50 ? '🌧️' : '⛅'} ${sum.next3Max}% chance of rain` : '';
+    $('rain-val').innerHTML = sum ? `${sum.next3Max}%${sum.next3Max >= 50 ? ' <small>bring an umbrella</small>' : ''}` : '<small>unavailable</small>';
   });
 }
 
@@ -133,13 +134,13 @@ async function showRoute(from, to) {
     map.fitBounds(L.latLngBounds(route.coords), { paddingTopLeft: [40, 40], paddingBottomRight: [40, 120] });
     $('route-bar').hidden = false;
     $('route-bar').innerHTML = `
-      <div><b>${route.km} km · ${formatDuration(route.min)}</b> to ${to.name}<small>Estimate, no live traffic</small></div>
-      <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink(me ? null : from, to)}">🧭 Navigate</a>
+      <div><b>${route.km} km · ${formatDuration(route.min)}</b><small>to ${to.name} · estimate, no live traffic</small></div>
+      <a class="btn-solid" target="_blank" rel="noopener" href="${navLink(me ? null : from, to)}">Navigate</a>
       <button class="x-small" type="button" id="clear-route" aria-label="Clear route">&times;</button>`;
     $('clear-route').onclick = clearRoute;
   } catch {
     if (selected !== to) return;
-    $('show-route').textContent = '🗺️ Show route';
+    $('show-route').textContent = 'Preview route';
     toast('Route preview is not available right now. Navigate still works.');
   }
 }

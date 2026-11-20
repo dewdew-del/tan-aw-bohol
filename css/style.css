@@ -189,3 +189,27 @@ label { font-size: .85rem; color: var(--muted); display: grid; gap: 4px; }
 .route-bar small { display: block; color: var(--muted); font-size: .78rem; }
 .drawer .ph2.no-photo { height: 110px; justify-content: center; align-items: center; }
 .drawer .ph2.no-photo span { font-size: 3rem; letter-spacing: 0; }
+
+/* ---------- spot popup, guidebook style ---------- */
+.drawer { border-radius: 10px; width: min(560px, calc(100% - 32px)); }
+.drawer .x { top: 12px; right: 12px; width: 34px; height: 34px; background: rgba(255,255,255,.92); box-shadow: none; }
+.pop-head { height: 260px; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; padding: 22px 26px; color: #fff; }
+.pop-head .kicker { font: 600 .72rem var(--font-body); letter-spacing: .18em; text-transform: uppercase; color: #f6c36a; }
+.pop-head h3 { font: 700 clamp(1.6rem, 4vw, 2.1rem)/1.05 var(--font-head); color: #fff; }
+.drawer .body { padding: 22px 26px 24px; gap: 18px; }
+.lede { font-size: 1.05rem; line-height: 1.55; color: #33454a; }
+.specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.specs div { padding: 12px 0; }
+.specs div + div { border-left: 1px solid var(--line); padding-left: 18px; }
+.specs dt { font: 600 .68rem var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.specs dd { margin: 0; font: 600 1.35rem var(--font-head); color: var(--fg); }
+.specs small { font: 400 .82rem var(--font-body); color: var(--muted); margin-left: 4px; }
+.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+.btn-solid { display: inline-block; background: var(--fg); color: #fff; text-decoration: none; font: 600 .95rem var(--font-body); padding: 12px 26px; border-radius: 6px; border: 0; cursor: pointer; transition: background .15s; }
+.btn-solid:hover { background: var(--accent); }
+.btn-text { background: none; border: 0; padding: 12px 2px; font: 600 .95rem var(--font-body); color: var(--fg); cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; text-decoration-thickness: 2px; }
+.btn-text:hover { text-decoration-color: var(--accent); color: var(--accent); }
+.route-bar { border-radius: 10px; }
+.route-bar .btn-solid { padding: 10px 20px; }
+.search-toggle { border-radius: 6px; font-size: .9rem; }
+.pop-head.plain { height: 150px; }
