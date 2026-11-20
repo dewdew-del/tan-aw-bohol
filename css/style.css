@@ -184,7 +184,7 @@ label { font-size: .85rem; color: var(--muted); display: grid; gap: 4px; }
 .dir { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
 .dir h4 { margin: 0; font: 600 .95rem var(--font-head); }
 .dir .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn-dir { display: inline-flex; align-items: center; gap: 6px; font: 600 .9rem var(--font-body); padding: 8px 14px; border-radius: 999px; cursor: pointer; text-decoration: none; border: 1px solid var(--accent-2); background: #fff; color: var(--accent-2); }
-.btn-dir.go { background: var(--accent-2); color: #fff; }
+.btn-dir { display: inline-flex; align-items: center; gap: 6px; font: 600 .9rem var(--font-body); padding: 8px 14px; border-radius: 999px; cursor: pointer; text-decoration: none; border: 1px solid var(--accent); background: #fff; color: var(--accent); }
+.btn-dir.go { background: var(--accent); color: #fff; }
 .btn-dir:hover { filter: brightness(1.06); }
 .route-sum b { font: 600 1.15rem var(--font-head); }
