@@ -1,7 +1,7 @@
 // Map page: full interactive map with search, filters, distances, rain, location and 360° walk-throughs.
 import { spots } from './spots.js';
 import { tours } from './tours.js';
-import { haversineKm, roadKm, nearest, shouldWarn, formatDuration, navLink } from './lib.js';
+import { haversineKm, roadKm, shouldWarn, formatDuration, navLink } from './lib.js';
 import { loadRain, rainWarning } from './rain.js';
 import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation, ICONS } from './basemap.js';
 
@@ -11,7 +11,6 @@ const TAGBILARAN = { lat: 9.6539, lon: 123.866, name: 'Tagbilaran City' };
 
 let me = null;              // {lat, lon} from GPS
 let selected = null;        // spot
-let category = 'All';
 const markers = new Map();  // id -> marker
 
 // ---------- map ----------
@@ -35,39 +34,16 @@ for (const s of spots) {
   markers.set(s.id, m);
 }
 
-// ---------- filters, list ----------
-const types = ['All', ...new Set(spots.map(s => s.type))];
-$('chips').innerHTML = types.map(t =>
-  `<button class="chip" type="button" data-t="${t}" aria-pressed="${t === 'All'}">${t}</button>`).join('');
-$('chips').addEventListener('click', e => {
-  const b = e.target.closest('.chip'); if (!b) return;
-  category = b.dataset.t;
-  for (const c of $('chips').children) c.setAttribute('aria-pressed', c === b);
-  renderList();
-});
+// ---------- search + list ----------
 $('search').addEventListener('input', renderList);
 
-function fromPoint() {
-  const v = $('from').value;
-  if (v === 'me') return me && { ...me, name: 'your location' };
-  if (v === 'tagb') return TAGBILARAN;
-  return spots.find(s => s.id === v);
-}
-function renderFrom() {
-  const cur = $('from').value || 'tagb';
-  $('from').innerHTML =
-    `<option value="tagb">Tagbilaran City</option>` +
-    `<option value="me" ${me ? '' : 'disabled'}>My location${me ? '' : ' (turn on location)'}</option>` +
-    spots.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  $('from').value = cur === 'me' && !me ? 'tagb' : cur;
-}
-$('from').addEventListener('change', () => { renderList(); if (selected) renderDetail(selected); });
+// distances start from the visitor's location when we have it, otherwise Tagbilaran
+const fromPoint = () => me ? { ...me, name: 'you' } : TAGBILARAN;
 
 function renderList() {
   const q = $('search').value.trim().toLowerCase();
   const from = fromPoint();
   const shown = spots.filter(s =>
-    (category === 'All' || s.type === category) &&
     (!q || (s.name + ' ' + s.type + ' ' + s.desc).toLowerCase().includes(q)));
   for (const s of spots) {
     const el = markers.get(s.id).getElement();
@@ -81,12 +57,12 @@ function renderList() {
     return `<li><button type="button" data-id="${s.id}" class="${s === selected ? 'on' : ''}"><span>${s.name}${tours[s.id] ? '<span class="badge360">360°</span>' : ''}</span><small>${km}</small></button></li>`;
   }).join('') || '<li class="meta">No spots match.</li>';
 }
-for (const listId of ['list', 'nearby-list']) {
-  $(listId).addEventListener('click', e => {
-    const b = e.target.closest('button[data-id]');
-    if (b) select(spots.find(s => s.id === b.dataset.id), true);
-  });
-}
+$('list').addEventListener('click', e => {
+  const b = e.target.closest('button[data-id]');
+  if (!b) return;
+  closeSearch(); // the panel is only for searching
+  select(spots.find(s => s.id === b.dataset.id), true);
+});
 
 // ---------- spot popup (centred over the map; click outside to close) ----------
 function select(s, fly = false) {
@@ -125,7 +101,7 @@ function renderDetail(s) {
       <div class="actions">
         ${tours[s.id] ? '<button class="walk" type="button" id="walk">🚶 Walk around 360°</button>' : ''}
         ${km != null ? `<button class="btn-dir" type="button" id="show-route">🗺️ Show route</button>
-        <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink($('from').value === 'me' ? null : from, s)}">🧭 Navigate</a>` : ''}
+        <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink(me ? null : from, s)}">🧭 Navigate</a>` : ''}
       </div>
     </div>`;
   $('close-detail').onclick = closeDetail;
@@ -158,7 +134,7 @@ async function showRoute(from, to) {
     $('route-bar').hidden = false;
     $('route-bar').innerHTML = `
       <div><b>${route.km} km · ${formatDuration(route.min)}</b> to ${to.name}<small>Estimate, no live traffic</small></div>
-      <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink($('from').value === 'me' ? null : from, to)}">🧭 Navigate</a>
+      <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink(me ? null : from, to)}">🧭 Navigate</a>
       <button class="x-small" type="button" id="clear-route" aria-label="Clear route">&times;</button>`;
     $('clear-route').onclick = clearRoute;
   } catch {
@@ -172,7 +148,8 @@ async function showRoute(from, to) {
 $('search-toggle').addEventListener('click', () => {
   $('tools').hidden = false; $('search-toggle').hidden = true; $('search').focus();
 });
-$('tools-close').addEventListener('click', () => { $('tools').hidden = true; $('search-toggle').hidden = false; });
+function closeSearch() { $('tools').hidden = true; $('search-toggle').hidden = false; }
+$('tools-close').addEventListener('click', closeSearch);
 
 // ---------- location ----------
 let meMarker = null, lastRainCheck = 0;
@@ -183,12 +160,8 @@ watchLocation(p => {
   else meMarker.setLatLng([me.lat, me.lon]);
   if (first) {
     if (!selected) map.flyTo([me.lat, me.lon], 11);
-    renderFrom(); $('from').value = 'me';
     renderList(); if (selected) renderDetail(selected);
   }
-  $('nearby').hidden = false;
-  $('nearby-list').innerHTML = nearest(me, spots, 5).map(({ spot, km }) =>
-    `<li><button type="button" data-id="${spot.id}"><span>${spot.name}</span><small>${roadKm(km)} km</small></button></li>`).join('');
   if (Date.now() - lastRainCheck > 10 * 60 * 1000) {
     lastRainCheck = Date.now();
     loadRain(me).then(sum => { $('rain-banner').hidden = !shouldWarn(sum); if (sum) $('rain-banner').textContent = rainWarning(sum); });
@@ -232,7 +205,6 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 5000);
 }
 
-renderFrom();
 renderList();
 // map.html#chocolate-hills opens that spot (used by the home page's photo panels)
 const fromHash = spots.find(s => s.id === location.hash.slice(1));
