@@ -49,3 +49,17 @@ watchLocation(p => {
   const io = new IntersectionObserver(es => es.forEach(x => x.target.classList.toggle('pre', !x.isIntersecting)), { threshold: 0.2 });
   els.forEach(e => io.observe(e));
 })();
+
+// ---------- header: hide when scrolling down, show again when scrolling up (like tourism.gov.ph) ----------
+let lastY = scrollY, ticking = false;
+addEventListener('scroll', () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    const y = scrollY;
+    if (Math.abs(y - lastY) > 6) document.body.classList.toggle('nav-hidden', y > lastY && y > 80);
+    lastY = y; ticking = false;
+  });
+}, { passive: true });
+// keyboard users tabbing into the header should always see it
+document.querySelector('.top').addEventListener('focusin', () => document.body.classList.remove('nav-hidden'));
