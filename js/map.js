@@ -2,8 +2,8 @@
 import { spots } from './spots.js';
 import { tours } from './tours.js';
 import { haversineKm, roadKm, nearest, shouldWarn, formatDuration, navLink } from './lib.js';
-import { loadRain, rainHtml, rainWarning } from './rain.js';
-import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation } from './basemap.js';
+import { loadRain, rainWarning } from './rain.js';
+import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation, ICONS } from './basemap.js';
 
 const L = window.L;
 const $ = id => document.getElementById(id);
@@ -16,10 +16,11 @@ const markers = new Map();  // id -> marker
 
 // ---------- map ----------
 const map = createBoholMap('map');
+map.createPane('route').style.zIndex = 420; // route line above street tiles
 // fit the whole island, leaving room for the floating list panel on wide screens
 const showIsland = (animate = true) => map.fitBounds(islandBounds, {
   paddingTopLeft: [20, 20],
-  paddingBottomRight: [getComputedStyle(document.querySelector('.tools')).position === 'absolute' ? 350 : 20, 20],
+  paddingBottomRight: [20, 20],
   animate,
 });
 showIsland(false);
@@ -87,82 +88,91 @@ for (const listId of ['list', 'nearby-list']) {
   });
 }
 
-// ---------- detail ----------
+// ---------- spot popup (centred over the map; click outside to close) ----------
 function select(s, fly = false) {
   selected = s;
   history.replaceState(null, '', '#' + s.id);
   renderDetail(s);
-  if (fly) {
-    // centre the spot in the free space beside the detail card, not behind it
-    const z = 11.5, card = $('detail').offsetWidth, free = map.getSize().x - card;
-    const shift = free > 200 ? card / 2 : 0;
-    map.flyTo(map.unproject(map.project([s.lat, s.lon], z).subtract([shift, 0]), z), z, { duration: 0.8 });
-  }
+  if (fly) map.flyTo([s.lat, s.lon], 11.5, { duration: 0.8 });
   renderList();
 }
 
+function closeDetail() {
+  if ($('detail').hidden) return;
+  $('detail').hidden = $('backdrop').hidden = true;
+  selected = null;
+  history.replaceState(null, '', location.pathname);
+  renderList();
+}
+$('backdrop').addEventListener('click', closeDetail);
+
 function renderDetail(s) {
-  clearRoute();
   const from = fromPoint();
-  const km = from && from.id !== s.id ? haversineKm(from, s) : null;
-  const bg = s.img ? `background-image:linear-gradient(transparent 55%,rgba(10,30,34,.35)),url('${s.img}')` : 'background-image:linear-gradient(135deg,#0e7c86,#0a4f57)';
-  $('detail').hidden = false;
+  const km = from && from.id !== s.id ? roadKm(haversineKm(from, s)) : null;
+  const bg = s.img ? `background-image:url('${s.img}')` : 'background-image:linear-gradient(135deg,#0e7c86,#0a4f57)';
+  $('detail').hidden = $('backdrop').hidden = false;
   $('detail').innerHTML = `
     <button class="x" id="close-detail" type="button" aria-label="Close">&times;</button>
-    <div class="ph2" style="${bg}">${s.img ? '' : s.type}</div>
+    <div class="ph2${s.img ? '' : ' no-photo'}" style="${bg}">${s.img ? '' : `<span>${ICONS[s.type] || '📍'}</span>`}</div>
     <div class="body">
       <span class="tag">${s.type}</span>
       <h3>${s.name}</h3>
-      <p>${s.desc}</p>
-      ${km != null ? `<div class="dist"><div><b>${km.toFixed(1)} km</b><span>straight line</span></div><div><b>~${Math.round(roadKm(km))} km</b><span>by road (estimate)</span></div></div>
-      <span class="note">From ${from.name}</span>` : ''}
-      <div class="rain" id="rain-box" aria-live="polite">Checking the chance of rain…</div>
-      ${tours[s.id] ? '<button class="walk" type="button" id="walk">🚶 Walk around in 360°</button>' : ''}
-      ${from && from.id !== s.id ? `<div class="dir">
-        <h4>Directions from ${from.name}</h4>
-        <div class="row">
-          <button class="btn-dir" type="button" id="show-route">🗺️ Show route</button>
-          <a class="btn-dir go" id="nav" target="_blank" rel="noopener" href="${navLink($('from').value === 'me' ? null : from, s)}">🧭 Start navigation</a>
-        </div>
-        <div id="route-box" aria-live="polite"></div>
-      </div>` : ''}
+      <p>${s.desc.split('. ')[0].replace(/\.$/, '')}.</p>
+      <div class="facts">
+        ${km != null ? `<span>📍 ~${Math.round(km)} km from ${from.name.replace(' City', '')}</span>` : ''}
+        <span id="rain-chip" aria-live="polite">⛅ Checking rain…</span>
+      </div>
+      <div class="actions">
+        ${tours[s.id] ? '<button class="walk" type="button" id="walk">🚶 Walk around 360°</button>' : ''}
+        ${km != null ? `<button class="btn-dir" type="button" id="show-route">🗺️ Show route</button>
+        <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink($('from').value === 'me' ? null : from, s)}">🧭 Navigate</a>` : ''}
+      </div>
     </div>`;
-  $('close-detail').onclick = () => {
-    $('detail').hidden = true; selected = null;
-    history.replaceState(null, '', location.pathname);
-    clearRoute(); renderList(); showIsland();
-  };
+  $('close-detail').onclick = closeDetail;
   $('show-route')?.addEventListener('click', () => showRoute(from, s));
   if (tours[s.id]) $('walk').onclick = () => openTour(s);
-  loadRain(s).then(sum => { if (selected === s) $('rain-box').innerHTML = rainHtml(sum); });
+  loadRain(s).then(sum => {
+    if (selected !== s) return;
+    $('rain-chip').textContent = sum ? `${sum.next3Max >= 50 ? '🌧️' : '⛅'} ${sum.next3Max}% chance of rain` : '';
+  });
 }
 
 // ---------- route preview (GraphHopper via /api/route) ----------
 let routeLayer = null;
-function clearRoute() { routeLayer?.remove(); routeLayer = null; }
+function clearRoute() { routeLayer?.remove(); routeLayer = null; $('route-bar').hidden = true; }
 
 async function showRoute(from, to) {
-  const box = $('route-box');
-  box.textContent = 'Finding the road route…';
+  $('show-route').textContent = 'Finding route…';
   try {
     const r = await fetch(`/api/route?from=${from.lat},${from.lon}&to=${to.lat},${to.lon}`, { signal: AbortSignal.timeout(20000) });
     const route = await r.json();
     if (!r.ok) throw new Error(route.error);
     if (selected !== to) return; // user moved on
+    closeDetail();
     clearRoute();
     routeLayer = L.layerGroup([
-      L.polyline(route.coords, { color: '#fff', weight: 9, opacity: 0.9, interactive: false }),
-      L.polyline(route.coords, { color: '#0e7c86', weight: 5, interactive: false }),
+      L.polyline(route.coords, { pane: 'route', color: '#fff', weight: 9, opacity: 0.9, interactive: false }),
+      L.polyline(route.coords, { pane: 'route', color: '#0e7c86', weight: 5, interactive: false }),
     ]).addTo(map);
-    const card = $('detail').offsetWidth, side = map.getSize().x - card > 200;
-    const list = getComputedStyle(document.querySelector('.tools')).position === 'absolute' ? 350 : 30; // floating spot list on the right
-    map.fitBounds(L.latLngBounds(route.coords), { paddingTopLeft: [side ? card + 30 : 30, 30], paddingBottomRight: [list, 30] });
-    box.innerHTML = `<p class="route-sum"><b>${route.km} km</b> · about ${formatDuration(route.min)} by car</p>
-      <p class="note">Estimated route from OpenStreetMap roads, without live traffic. For the drive, use <b>Start navigation</b> and follow road signs and local advice.</p>`;
+    map.fitBounds(L.latLngBounds(route.coords), { paddingTopLeft: [40, 40], paddingBottomRight: [40, 120] });
+    $('route-bar').hidden = false;
+    $('route-bar').innerHTML = `
+      <div><b>${route.km} km · ${formatDuration(route.min)}</b> to ${to.name}<small>Estimate, no live traffic</small></div>
+      <a class="btn-dir go" target="_blank" rel="noopener" href="${navLink($('from').value === 'me' ? null : from, to)}">🧭 Navigate</a>
+      <button class="x-small" type="button" id="clear-route" aria-label="Clear route">&times;</button>`;
+    $('clear-route').onclick = clearRoute;
   } catch {
-    if (selected === to) box.innerHTML = '<p class="note">Route preview is not available right now. <b>Start navigation</b> still works.</p>';
+    if (selected !== to) return;
+    $('show-route').textContent = '🗺️ Show route';
+    toast('Route preview is not available right now. Navigate still works.');
   }
 }
+
+// ---------- search panel (hidden until asked for) ----------
+$('search-toggle').addEventListener('click', () => {
+  $('tools').hidden = false; $('search-toggle').hidden = true; $('search').focus();
+});
+$('tools-close').addEventListener('click', () => { $('tools').hidden = true; $('search-toggle').hidden = false; });
 
 // ---------- location ----------
 let meMarker = null, lastRainCheck = 0;
@@ -213,7 +223,7 @@ function closeTour() {
   lastFocus?.focus();
 }
 $('pano-close').addEventListener('click', closeTour);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTour(); });
+document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (!$('pano').hidden) closeTour(); else closeDetail(); });
 
 // ---------- misc ----------
 let toastTimer;

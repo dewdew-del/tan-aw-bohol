@@ -23,9 +23,13 @@
 <main class="wrap">
   <div class="mapbox">
     <div id="map" role="region" aria-label="Map of Bohol with tourist spots. Click a pin for details."></div>
-    <div id="detail" class="drawer" hidden></div>
+    <div id="backdrop" class="backdrop" hidden></div>
+    <div id="detail" class="drawer" role="dialog" aria-label="Spot details" hidden></div>
+    <div id="route-bar" class="route-bar" role="status" hidden></div>
+    <button id="search-toggle" class="search-toggle" type="button">🔍 Search spots</button>
   </div>
-  <aside class="tools card">
+  <aside id="tools" class="tools card" hidden>
+    <button id="tools-close" class="x-small" type="button" aria-label="Close search">&times;</button>
     <input id="search" type="search" placeholder="Search spots…" aria-label="Search spots">
     <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
     <label>Measure distance from

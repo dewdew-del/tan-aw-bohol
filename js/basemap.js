@@ -51,7 +51,8 @@ export function createBoholMap(el, { interactive = true } = {}) {
   // Zoomed in close, swap the drawing for real streets so routes have roads under them.
   if (interactive) {
     // shortcut: uses the public OSM tile server (fine for light/school traffic); switch to a tile provider if the site gets busy
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom: 13, maxZoom: 19, attribution: 'Streets © OpenStreetMap contributors' }).addTo(map);
+    map.createPane('streets').style.zIndex = 410; // above the drawn island, so the island shows while tiles load
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { pane: 'streets', minZoom: 13, maxZoom: 19, attribution: 'Streets © OpenStreetMap contributors' }).addTo(map);
     const streets = () => map.getContainer().classList.toggle('streets', map.getZoom() >= 13);
     map.on('zoomend', streets);
   }
