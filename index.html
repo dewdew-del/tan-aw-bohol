@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tan-aw Bohol</title>
-<meta name="description" content="Interactive tourism and cultural heritage map of Bohol with rain forecasts, your location and 360° walk-throughs.">
+<meta name="description" content="Tourism and cultural heritage guide to Bohol with an interactive map, rain forecasts, your location and 360° walk-throughs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=DM+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.css">
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" href="images/logo.svg" type="image/svg+xml">
 </head>
 <body>
 <nav class="top">
   <a class="brand" href="#top"><img class="nlogo" src="images/logo.svg" alt=""><span>Tan-aw Bohol</span></a>
-  <div class="links"><a href="#explore">Explore</a><a href="#places">Places</a></div></nav>
+  <div class="links"><a href="#places">Places</a><a href="#explore">Map</a></div>
+</nav>
 <div id="rain-banner" class="banner" role="status" hidden></div>
 
 <header class="hero" id="top">
@@ -24,54 +24,28 @@
   <div class="heroin">
     <p class="tag">Island of Heritage</p>
     <h1>Mabuhay sa Bohol</h1>
-    <p class="lede">Chocolate Hills, centuries-old churches and quiet rivers. Pick a spot on the map to see how far it is, whether it might rain, and walk around it in 360°.</p>
-    <a class="cta" href="#explore"><b>Explore</b><i>the map</i></a>
+    <p class="lede">Chocolate Hills, centuries-old churches and quiet rivers. Find a spot, see how far it is, check if it might rain, and walk around it in 360°.</p>
   </div>
 </header>
-
-<h2 id="explore" class="sec">Explore the map</h2>
-<div class="wrap">
-  <div class="mapbox">
-    <div id="map" role="region" aria-label="Map of Bohol with tourist spots. Click a pin for details."></div>
-    <div id="detail" class="drawer" hidden></div>
-  </div>
-  <aside class="tools card">
-    <input id="search" type="search" placeholder="Search spots…" aria-label="Search spots">
-    <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
-    <label>Measure distance from
-      <select id="from"></select>
-    </label>
-    <div id="nearby" class="nearby" hidden>
-      <h3>Nearest to you</h3>
-      <ol id="nearby-list"></ol>
-    </div>
-    <h3 class="list-title">Spots <span id="count"></span></h3>
-    <ul id="list" class="list"></ul>
-  </aside>
-</div>
 
 <h2 class="sec" id="places">Most popular places to visit in Bohol</h2>
 <section class="panels" id="panels"></section>
 
+<h2 class="sec" id="explore">Explore the map</h2>
+<a class="preview" href="map.html" aria-label="Open the interactive map of Bohol">
+  <div id="preview-map" aria-hidden="true"></div>
+  <span class="open-map">Open the map <span aria-hidden="true">→</span></span>
+</a>
+
 <footer class="foot">
   <div class="fbrand"><img class="flogo" src="images/logo.svg" alt="Tan-aw Bohol tarsier logo"><div><b>Tan-aw Bohol</b><span>ISLAND OF HERITAGE</span></div></div>
-  <p>Weather: <a href="https://open-meteo.com/">Open-Meteo</a>. Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.
+  <p>Weather: <a href="https://open-meteo.com/">Open-Meteo</a>. Island outlines © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.
   Photo credits (Wikimedia Commons): Chocolate Hills in Carmen, Bohol by Hannah Tessa Obedencio, CC BY-SA 4.0. Baclayon Church, Bohol by shankar s., CC BY 2.0. Cadapdapan Rice Terraces Candijay by Grasyacabu, CC BY-SA 4.0. Philippine Tarsier Bohol by John Martin Perry, CC BY-SA 4.0. Alona Beach, Panglao by Jeroen36, CC BY 3.0. Loboc River Bohol 2017 by Øyvind Holmstad, CC BY-SA 4.0.</p>
 </footer>
-
-<div id="pano" class="pano" role="dialog" aria-modal="true" aria-labelledby="pano-title" hidden>
-  <div class="pano-bar">
-    <strong id="pano-title"></strong>
-    <button id="pano-close" class="btn" type="button" aria-label="Close walk-through">✕ Close</button>
-  </div>
-  <div id="pano-view"></div>
-  <div id="pano-readout" class="readout" aria-hidden="true"></div>
-</div>
 
 <div id="toast" class="toast" role="alert" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/home.js"></script>
 </body>
 </html>
