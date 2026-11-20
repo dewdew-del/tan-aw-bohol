@@ -24,7 +24,9 @@ export function rainSummary(hourly, nowIso) {
   if (i < 0) return null;
   const p = hourly.precipitation_probability;
   const next12 = hourly.time.slice(i, i + 12).map((time, k) => ({ time, p: p[i + k] ?? 0 }));
-  return { now: p[i] ?? 0, next3Max: Math.max(...next12.slice(0, 3).map(h => h.p)), next12 };
+  const day = hour.slice(0, 10);
+  const todayMax = Math.max(...hourly.time.map((t, k) => (k >= i && t.startsWith(day) ? p[k] ?? 0 : 0)));
+  return { now: p[i] ?? 0, next3Max: Math.max(...next12.slice(0, 3).map(h => h.p)), todayMax, next12 };
 }
 
 export const shouldWarn = s => !!s && s.next3Max >= 50;

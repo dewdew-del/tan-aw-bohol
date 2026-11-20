@@ -52,3 +52,12 @@ test('real tours data is valid and points at real spots', () => {
   assert.deepEqual(validateTours(tours), []);
   for (const id of Object.keys(tours)) assert.ok(spots.some(s => s.id === id), id);
 });
+
+test('rainSummary todayMax covers the rest of today only', () => {
+  const hourly = {
+    time: ['2026-11-20T09:00', '2026-11-20T10:00', '2026-11-20T15:00', '2026-11-20T23:00', '2026-11-21T00:00', '2026-11-21T01:00'],
+    precipitation_probability: [95, 10, 60, 40, 90, 99],
+  };
+  const s = rainSummary(hourly, '2026-11-20T10:30');
+  assert.equal(s.todayMax, 60); // 9:00 already passed; tomorrow's 90/99 excluded
+});

@@ -97,7 +97,7 @@ function renderDetail(s) {
       <p class="lede">${s.desc.split('. ')[0].replace(/\.$/, '')}.</p>
       <dl class="specs">
         ${km != null ? `<div><dt>Distance</dt><dd>${Math.round(km)} km <small>from ${from.name.replace(' City', '')}</small></dd></div>` : ''}
-        <div><dt>Rain, next 3 hrs</dt><dd id="rain-val" aria-live="polite">…</dd></div>
+        <div><dt>Rain today</dt><dd id="rain-val" aria-live="polite">…</dd></div>
       </dl>
       <div class="cta-row">
         ${km != null ? `<a class="btn-solid" target="_blank" rel="noopener" href="${navLink(me ? null : from, s)}">Navigate</a>
@@ -110,7 +110,7 @@ function renderDetail(s) {
   if (tours[s.id]) $('walk').onclick = () => openTour(s);
   loadRain(s).then(sum => {
     if (selected !== s) return;
-    $('rain-val').innerHTML = sum ? `${sum.next3Max}%${sum.next3Max >= 50 ? ' <small>bring an umbrella</small>' : ''}` : '<small>unavailable</small>';
+    $('rain-val').innerHTML = sum ? `${sum.todayMax}%${sum.todayMax >= 50 ? ' <small>bring an umbrella</small>' : ''}` : '<small>unavailable</small>';
   });
 }
 
