@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tan-aw Bohol</title>
 <meta name="description" content="Interactive tourism and cultural heritage map of Bohol with rain forecasts, your location and 360° walk-throughs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,44 +10,56 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.css">
 <link rel="stylesheet" href="css/style.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='22' cy='10' r='5' fill='%23e8a33d'/%3E%3Cpath d='M2 24q6-12 12 0q6-10 16 0v6H2z' fill='%236b3f23'/%3E%3C/svg%3E">
+<link rel="icon" href="images/logo.svg" type="image/svg+xml">
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="22" cy="10" r="5" fill="#e8a33d"/><path d="M2 24q6-12 12 0q6-10 16 0v6H2z" fill="#6b3f23"/><path d="M0 28h32v4H0z" fill="#0e7c86"/></svg>
-    <div><h1>Tan-aw Bohol</h1><p>Island of Heritage</p></div>
-  </div>
-  <button id="locate" class="btn btn-primary" type="button">📍 Show my location</button>
-</header>
-
+<nav class="top">
+  <a class="brand" href="#top"><img class="nlogo" src="images/logo.svg" alt=""><span>Tan-aw Bohol</span></a>
+  <div class="links"><a href="#explore">Explore</a><a href="#places">Places</a></div>
+  <button id="locate" class="locate" type="button">📍 Show my location</button>
+</nav>
 <div id="rain-banner" class="banner" role="status" hidden></div>
 
-<main class="layout">
-  <section class="map-wrap" aria-label="Map of Bohol">
-    <div id="map"></div>
-  </section>
+<header class="hero" id="top">
+  <img class="bg" src="images/chocolate-hills.jpg" alt="Chocolate Hills in Carmen, Bohol">
+  <div class="shade"></div>
+  <div class="heroin">
+    <p class="tag">Island of Heritage</p>
+    <h1>Mabuhay sa Bohol</h1>
+    <p class="lede">Chocolate Hills, centuries-old churches and quiet rivers. Pick a spot on the map to see how far it is, whether it might rain, and walk around it in 360°.</p>
+    <a class="cta" href="#explore"><b>Explore</b><i>the map</i></a>
+  </div>
+</header>
 
-  <aside class="side">
-    <div class="controls">
-      <input id="search" type="search" placeholder="Search spots…" aria-label="Search spots">
-      <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
-      <label class="from">Measure distance from
-        <select id="from"></select>
-      </label>
-    </div>
-
-    <div id="detail" class="detail" hidden></div>
-
+<h2 id="explore" class="sec">Explore the map</h2>
+<div class="wrap">
+  <div class="mapbox">
+    <div id="map" role="region" aria-label="Map of Bohol with tourist spots. Click a pin for details."></div>
+    <div id="detail" class="drawer" hidden></div>
+  </div>
+  <aside class="tools card">
+    <input id="search" type="search" placeholder="Search spots…" aria-label="Search spots">
+    <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
+    <label>Measure distance from
+      <select id="from"></select>
+    </label>
     <div id="nearby" class="nearby" hidden>
-      <h2>Nearest to you</h2>
+      <h3>Nearest to you</h3>
       <ol id="nearby-list"></ol>
     </div>
-
-    <h2 class="list-title">Spots <span id="count"></span></h2>
+    <h3 class="list-title">Spots <span id="count"></span></h3>
     <ul id="list" class="list"></ul>
   </aside>
-</main>
+</div>
+
+<h2 class="sec" id="places">Most popular places to visit in Bohol</h2>
+<section class="panels" id="panels"></section>
+
+<footer class="foot">
+  <div class="fbrand"><img class="flogo" src="images/logo.svg" alt="Tan-aw Bohol tarsier logo"><div><b>Tan-aw Bohol</b><span>ISLAND OF HERITAGE</span></div></div>
+  <p>Weather: <a href="https://open-meteo.com/">Open-Meteo</a>. Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.
+  Photo credits (Wikimedia Commons): Chocolate Hills in Carmen, Bohol by Hannah Tessa Obedencio, CC BY-SA 4.0. Baclayon Church, Bohol by shankar s., CC BY 2.0. Cadapdapan Rice Terraces Candijay by Grasyacabu, CC BY-SA 4.0. Philippine Tarsier Bohol by John Martin Perry, CC BY-SA 4.0. Alona Beach, Panglao by Jeroen36, CC BY 3.0. Loboc River Bohol 2017 by Øyvind Holmstad, CC BY-SA 4.0.</p>
+</footer>
 
 <div id="pano" class="pano" role="dialog" aria-modal="true" aria-labelledby="pano-title" hidden>
   <div class="pano-bar">
@@ -59,11 +71,6 @@
 </div>
 
 <div id="toast" class="toast" role="alert" hidden></div>
-
-<footer class="foot">
-  Weather: <a href="https://open-meteo.com/">Open-Meteo</a> · Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors ·
-  Photos: Wikimedia Commons (Chocolate Hills by Hannah Tessa Obedencio, CC BY-SA 4.0; Baclayon Church by shankar s., CC BY 2.0; Cadapdapan Rice Terraces by Grasyacabu, CC BY-SA 4.0; Philippine Tarsier by John Martin Perry, CC BY-SA 4.0; Alona Beach by Jeroen36, CC BY 3.0; Loboc River by Øyvind Holmstad, CC BY-SA 4.0)
-</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>

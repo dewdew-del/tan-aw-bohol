@@ -1,15 +1,12 @@
 import { spots } from './spots.js';
+import { MAIN, PANG } from './coast.js';
 import { tours } from './tours.js';
 import { haversineKm, roadKm, nearest, rainSummary, shouldWarn } from './lib.js';
 
 const L = window.L;
 const $ = id => document.getElementById(id);
 const TAGBILARAN = { lat: 9.6539, lon: 123.866, name: 'Tagbilaran City' };
-const COLORS = {
-  Heritage: '#6b3f23', Nature: '#3d8b37', Beach: '#e8a33d', Marine: '#0e7c86', Cave: '#6c5b7b',
-  Waterfall: '#2f80c9', River: '#3fa7b5', Wildlife: '#8c6d1f', Adventure: '#c0392b', Food: '#d35d8c',
-};
-const color = t => COLORS[t] || '#5a6f74';
+const PIN = '#0e7c86', PIN_ON = '#6b3f23';
 
 let me = null;              // {lat, lon} from GPS
 let selected = null;        // spot
@@ -17,14 +14,25 @@ let category = 'All';
 const markers = new Map();  // id -> marker
 
 // ---------- map ----------
-const map = L.map('map', { zoomControl: true }).setView([9.85, 124.15], 10);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 18, attribution: '© OpenStreetMap contributors',
-}).addTo(map);
+const map = L.map('map', { zoomControl: false, zoomSnap: 0.25 }).setView([9.85, 124.15], 10);
+L.control.zoom({ position: 'bottomright' }).addTo(map); // left side is taken by the detail card
+// Drawn island like the original site: beige land on a light-blue sea, no street tiles.
+const land = { color: '#8a7a55', weight: 1.3, fillColor: '#e4dcc4', fillOpacity: 1, interactive: false };
+for (const ring of [MAIN, PANG]) L.polygon(ring.map(([lon, lat]) => [lat, lon]), land).addTo(map);
+map.attributionControl.setPrefix(false).addAttribution('Outlines © OpenStreetMap contributors · pins approximate');
+map.setMaxBounds([[9.2, 123.3], [10.4, 124.9]]).setMinZoom(8).setMaxZoom(15);
+const island = L.latLngBounds([...MAIN, ...PANG].map(([lon, lat]) => [lat, lon]));
+// fit the whole island, leaving room for the floating list panel on wide screens
+const showIsland = (animate = true) => map.fitBounds(island, {
+  paddingTopLeft: [20, 20],
+  paddingBottomRight: [getComputedStyle(document.querySelector('.tools')).position === 'absolute' ? 350 : 20, 20],
+  animate,
+});
+showIsland(false);
 
 for (const s of spots) {
   const m = L.circleMarker([s.lat, s.lon], {
-    radius: 8, color: '#fff', weight: 2, fillColor: color(s.type), fillOpacity: 1,
+    radius: 8, color: '#fff', weight: 2, fillColor: PIN, fillOpacity: 1,
   }).addTo(map).bindTooltip(s.name + (tours[s.id] ? ' · 360°' : ''));
   m.on('click', () => select(s));
   markers.set(s.id, m);
@@ -33,7 +41,7 @@ for (const s of spots) {
 // ---------- filters, list ----------
 const types = ['All', ...new Set(spots.map(s => s.type))];
 $('chips').innerHTML = types.map(t =>
-  `<button class="chip" type="button" data-t="${t}" aria-pressed="${t === 'All'}">${t === 'All' ? '' : `<span class="dot" style="background:${color(t)}"></span>`}${t}</button>`).join('');
+  `<button class="chip" type="button" data-t="${t}" aria-pressed="${t === 'All'}">${t}</button>`).join('');
 $('chips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if (!b) return;
   category = b.dataset.t;
@@ -66,13 +74,14 @@ function renderList() {
     (!q || (s.name + ' ' + s.type + ' ' + s.desc).toLowerCase().includes(q)));
   for (const s of spots) {
     const on = shown.includes(s);
-    markers.get(s.id).setStyle({ opacity: on ? 1 : 0, fillOpacity: on ? 1 : 0 });
+    markers.get(s.id).setStyle({ opacity: on ? 1 : 0, fillOpacity: on ? 1 : 0, fillColor: s === selected ? PIN_ON : PIN });
+    markers.get(s.id).setRadius(s === selected ? 11 : 8);
     markers.get(s.id).getElement()?.style.setProperty('pointer-events', on ? 'auto' : 'none');
   }
   $('count').textContent = `(${shown.length})`;
   $('list').innerHTML = shown.map(s => {
     const km = from && from.id !== s.id ? `${roadKm(haversineKm(from, s))} km` : '';
-    return `<li><button type="button" data-id="${s.id}"><span><span class="dot" style="background:${color(s.type)}"></span>${s.name}${tours[s.id] ? '<span class="badge360">360°</span>' : ''}</span><small>${km}</small></button></li>`;
+    return `<li><button type="button" data-id="${s.id}" class="${s === selected ? 'on' : ''}"><span>${s.name}${tours[s.id] ? '<span class="badge360">360°</span>' : ''}</span><small>${km}</small></button></li>`;
   }).join('') || '<li class="meta">No spots match.</li>';
 }
 for (const listId of ['list', 'nearby-list']) {
@@ -87,29 +96,29 @@ function select(s, fly = false) {
   selected = s;
   if (fly) map.flyTo([s.lat, s.lon], 13, { duration: 0.8 });
   renderDetail(s);
-  $('detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  renderList();
+  const r = document.querySelector('.mapbox').getBoundingClientRect();
+  if (r.top < 0 || r.bottom > innerHeight) document.querySelector('.mapbox').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function renderDetail(s) {
   const from = fromPoint();
   const km = from && from.id !== s.id ? haversineKm(from, s) : null;
-  const hero = s.img
-    ? `background-image:linear-gradient(transparent 55%,rgba(0,0,0,.4)),url('${s.img}')`
-    : `background:linear-gradient(135deg,${color(s.type)},#14262b)`;
+  const bg = s.img ? `background-image:linear-gradient(transparent 55%,rgba(10,30,34,.35)),url('${s.img}')` : 'background-image:linear-gradient(135deg,#0e7c86,#0a4f57)';
   $('detail').hidden = false;
   $('detail').innerHTML = `
-    <div class="hero" style="${hero}"><span>${s.type}</span></div>
+    <button class="x" id="close-detail" type="button" aria-label="Close">&times;</button>
+    <div class="ph2" style="${bg}">${s.img ? '' : s.type}</div>
     <div class="body">
-      <h2>${s.name}</h2>
+      <span class="tag">${s.type}</span>
+      <h3>${s.name}</h3>
       <p>${s.desc}</p>
-      ${km != null ? `<p class="meta">≈ ${km.toFixed(1)} km straight line · about ${roadKm(km)} km by road from ${from.name}</p>` : ''}
-      <div class="rain" id="rain-box">Checking the chance of rain…</div>
-      <div class="actions">
-        ${tours[s.id] ? '<button class="btn btn-primary" type="button" id="walk">🚶 Walk around (360°)</button>' : ''}
-        <button class="btn" type="button" id="close-detail">Close</button>
-      </div>
+      ${km != null ? `<div class="dist"><div><b>${km.toFixed(1)} km</b><span>straight line</span></div><div><b>~${Math.round(roadKm(km))} km</b><span>by road (estimate)</span></div></div>
+      <span class="note">From ${from.name}</span>` : ''}
+      <div class="rain" id="rain-box" aria-live="polite">Checking the chance of rain…</div>
+      ${tours[s.id] ? '<button class="walk" type="button" id="walk">🚶 Walk around in 360°</button>' : ''}
     </div>`;
-  $('close-detail').onclick = () => { $('detail').hidden = true; selected = null; };
+  $('close-detail').onclick = () => { $('detail').hidden = true; selected = null; renderList(); showIsland(); };
   if (tours[s.id]) $('walk').onclick = () => openTour(s);
   loadRain(s).then(sum => { if (selected === s) $('rain-box').innerHTML = rainHtml(sum); });
 }
@@ -124,7 +133,7 @@ async function loadRain(p) {
   if (!hit || Date.now() - hit.at > 30 * 60 * 1000) {
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&hourly=precipitation_probability&forecast_days=2&timezone=Asia%2FManila`;
-      const r = await fetch(url);
+      const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); // weak mobile data: don't hang forever
       if (!r.ok) throw new Error(r.status);
       rainCache.set(key, { at: Date.now(), hourly: (await r.json()).hourly });
     } catch {
@@ -219,6 +228,27 @@ function toast(msg) {
   $('toast').textContent = msg; $('toast').hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 5000);
 }
+
+// ---------- photo panels ----------
+$('panels').innerHTML = spots.filter(s => s.img).map(s =>
+  `<button class="ph" type="button" data-id="${s.id}"><img src="${s.img}" alt="${s.name}" loading="lazy"><span class="cap"><b>${s.name}${tours[s.id] ? '<span class="badge360">360°</span>' : ''}</b><span>${s.desc.split('. ')[0]}.</span></span></button>`).join('');
+$('panels').addEventListener('click', e => {
+  const b = e.target.closest('.ph');
+  if (b) select(spots.find(s => s.id === b.dataset.id), true);
+});
+
+// ---------- scroll reveal (same feel as the original site) ----------
+(function reveal() {
+  const els = [...document.querySelectorAll('.sec, .ph, .foot')];
+  els.forEach(e => {
+    e.classList.add('rv');
+    if (e.classList.contains('ph')) e.style.setProperty('--d', ([...e.parentNode.children].indexOf(e) % 3) * 0.12 + 's');
+    if (e.getBoundingClientRect().top > innerHeight) e.classList.add('pre');
+  });
+  if (!('IntersectionObserver' in window)) return els.forEach(e => e.classList.remove('pre'));
+  const io = new IntersectionObserver(es => es.forEach(x => x.target.classList.toggle('pre', !x.isIntersecting)), { threshold: 0.2 });
+  els.forEach(e => io.observe(e));
+})();
 
 renderFrom();
 renderList();
