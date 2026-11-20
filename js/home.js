@@ -8,6 +8,11 @@ import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation } from '.
 const L = window.L;
 const $ = id => document.getElementById(id);
 
+// hero video: show the still poster instead for people who turned off motion or save mobile data
+if (matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData) {
+  const v = $('hero-video'); v.removeAttribute('autoplay'); v.preload = 'none'; v.pause();
+}
+
 // ---------- popular places (each opens that spot on the map page) ----------
 $('panels').innerHTML = spots.filter(s => s.img).map(s =>
   `<a class="ph" href="map.html#${s.id}"><img src="${s.img}" alt="${s.name}" loading="lazy"><span class="cap"><span class="kicker">${s.type}${tours[s.id] ? ' · 360° walk' : ''}</span><b>${s.name}</b><span>${s.desc.split('. ')[0]}.</span></span></a>`).join('');
