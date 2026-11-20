@@ -1,6 +1,6 @@
 # Tan-aw Bohol
 
-**Live demo:** coming soon (will be deployed on Vercel)
+**Live demo:** https://tan-aw-bohol.vercel.app
 
 An interactive tourism and cultural heritage map of Bohol, Philippines.
 
