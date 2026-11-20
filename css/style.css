@@ -236,3 +236,6 @@ label { font-size: .85rem; color: var(--muted); display: grid; gap: 4px; }
 .nav-hidden .top { transform: translateY(-100%); }
 .nav-hidden .banner { transform: translateY(-59px); }
 @media (prefers-reduced-motion: reduce) { .top, .banner { transition: none; } }
+/* "Open the map" centred at the bottom of the preview */
+.open-map { left: 50%; transform: translateX(-50%); }
+.preview:hover .open-map, .preview:focus-visible .open-map { transform: translateX(-50%); }
