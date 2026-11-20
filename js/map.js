@@ -1,7 +1,7 @@
 // Map page: full interactive map with search, filters, distances, rain, location and 360° walk-throughs.
 import { spots } from './spots.js';
 import { tours } from './tours.js';
-import { haversineKm, roadKm, nearest, shouldWarn } from './lib.js';
+import { haversineKm, roadKm, nearest, shouldWarn, formatDuration, navLink } from './lib.js';
 import { loadRain, rainHtml, rainWarning } from './rain.js';
 import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation } from './basemap.js';
 
@@ -102,6 +102,7 @@ function select(s, fly = false) {
 }
 
 function renderDetail(s) {
+  clearRoute();
   const from = fromPoint();
   const km = from && from.id !== s.id ? haversineKm(from, s) : null;
   const bg = s.img ? `background-image:linear-gradient(transparent 55%,rgba(10,30,34,.35)),url('${s.img}')` : 'background-image:linear-gradient(135deg,#0e7c86,#0a4f57)';
@@ -117,14 +118,49 @@ function renderDetail(s) {
       <span class="note">From ${from.name}</span>` : ''}
       <div class="rain" id="rain-box" aria-live="polite">Checking the chance of rain…</div>
       ${tours[s.id] ? '<button class="walk" type="button" id="walk">🚶 Walk around in 360°</button>' : ''}
+      ${from && from.id !== s.id ? `<div class="dir">
+        <h4>Directions from ${from.name}</h4>
+        <div class="row">
+          <button class="btn-dir" type="button" id="show-route">🗺️ Show route</button>
+          <a class="btn-dir go" id="nav" target="_blank" rel="noopener" href="${navLink($('from').value === 'me' ? null : from, s)}">🧭 Start navigation</a>
+        </div>
+        <div id="route-box" aria-live="polite"></div>
+      </div>` : ''}
     </div>`;
   $('close-detail').onclick = () => {
     $('detail').hidden = true; selected = null;
     history.replaceState(null, '', location.pathname);
-    renderList(); showIsland();
+    clearRoute(); renderList(); showIsland();
   };
+  $('show-route')?.addEventListener('click', () => showRoute(from, s));
   if (tours[s.id]) $('walk').onclick = () => openTour(s);
   loadRain(s).then(sum => { if (selected === s) $('rain-box').innerHTML = rainHtml(sum); });
+}
+
+// ---------- route preview (OpenRouteService via /api/route) ----------
+let routeLayer = null;
+function clearRoute() { routeLayer?.remove(); routeLayer = null; }
+
+async function showRoute(from, to) {
+  const box = $('route-box');
+  box.textContent = 'Finding the road route…';
+  try {
+    const r = await fetch(`/api/route?from=${from.lat},${from.lon}&to=${to.lat},${to.lon}`, { signal: AbortSignal.timeout(20000) });
+    const route = await r.json();
+    if (!r.ok) throw new Error(route.error);
+    if (selected !== to) return; // user moved on
+    clearRoute();
+    routeLayer = L.layerGroup([
+      L.polyline(route.coords, { color: '#fff', weight: 9, opacity: 0.9, interactive: false }),
+      L.polyline(route.coords, { color: '#0e7c86', weight: 5, interactive: false }),
+    ]).addTo(map);
+    const card = $('detail').offsetWidth, side = map.getSize().x - card > 200;
+    map.fitBounds(L.latLngBounds(route.coords), { paddingTopLeft: [side ? card + 30 : 30, 30], paddingBottomRight: [30, 30] });
+    box.innerHTML = `<p class="route-sum"><b>${route.km} km</b> · about ${formatDuration(route.min)} by car</p>
+      <p class="note">Estimated route from OpenStreetMap roads, without live traffic. For the drive, use <b>Start navigation</b> and follow road signs and local advice.</p>`;
+  } catch {
+    if (selected === to) box.innerHTML = '<p class="note">Route preview is not available right now. <b>Start navigation</b> still works.</p>';
+  }
 }
 
 // ---------- location ----------

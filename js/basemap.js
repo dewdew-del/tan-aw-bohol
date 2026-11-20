@@ -43,9 +43,17 @@ export function createBoholMap(el, { interactive = true } = {}) {
   map.createPane('deco').style.zIndex = 450; // above land, below pins
 
   for (const ring of [MAIN, PANG].map(ll)) {
-    L.polygon(ring, { stroke: true, color: '#9fdbe3', weight: 26, opacity: 0.55, fill: false, interactive: false }).addTo(map); // shallow water
-    L.polygon(ring, { stroke: true, color: '#f3e3b8', weight: 6, fill: false, interactive: false }).addTo(map);                  // beach
+    L.polygon(ring, { stroke: true, color: '#9fdbe3', weight: 26, opacity: 0.55, fill: false, className: 'coast', interactive: false }).addTo(map); // shallow water
+    L.polygon(ring, { stroke: true, color: '#f3e3b8', weight: 6, fill: false, className: 'coast', interactive: false }).addTo(map);                  // beach
     L.polygon(ring, { color: '#6f8f4e', weight: 1.2, fillColor: '#b9d88f', fillOpacity: 1, className: 'land', interactive: false }).addTo(map);
+  }
+
+  // Zoomed in close, swap the drawing for real streets so routes have roads under them.
+  if (interactive) {
+    // shortcut: uses the public OSM tile server (fine for light/school traffic); switch to a tile provider if the site gets busy
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom: 13, maxZoom: 19, attribution: 'Streets © OpenStreetMap contributors' }).addTo(map);
+    const streets = () => map.getContainer().classList.toggle('streets', map.getZoom() >= 13);
+    map.on('zoomend', streets);
   }
 
   const deco = (latlng, html, size, cls = 'deco') =>

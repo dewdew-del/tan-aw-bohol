@@ -42,3 +42,40 @@ export function validateTours(tours) {
   }
   return errors;
 }
+
+// ---------- routing ----------
+// Bohol + Panglao with a margin; the route function only accepts points inside it.
+const BOHOL = { lat0: 9.3, lat1: 10.3, lon0: 123.5, lon1: 124.7 };
+
+export function parsePoint(str) {
+  const [lat, lon] = String(str ?? '').split(',').map(Number);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (lat < BOHOL.lat0 || lat > BOHOL.lat1 || lon < BOHOL.lon0 || lon > BOHOL.lon1) return null;
+  return { lat, lon };
+}
+
+// OpenRouteService GeoJSON -> {coords: [[lat, lon]...], km, min}
+export function parseOrsRoute(geo) {
+  const f = geo?.features?.[0];
+  if (!f) return null;
+  const { distance, duration } = f.properties.summary;
+  return {
+    coords: f.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
+    km: Math.round(distance / 100) / 10,
+    min: Math.round(duration / 60),
+  };
+}
+
+export function formatDuration(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? `${h} h${m ? ` ${m} min` : ''}` : `${m} min`;
+}
+
+// Google Maps directions link (no key needed). Without an origin the app starts from the phone's own location.
+export function navLink(from, to) {
+  const p = new URLSearchParams({ api: '1' });
+  if (from) p.set('origin', `${from.lat},${from.lon}`);
+  p.set('destination', `${to.lat},${to.lon}`);
+  p.set('travelmode', 'driving');
+  return 'https://www.google.com/maps/dir/?' + p;
+}
