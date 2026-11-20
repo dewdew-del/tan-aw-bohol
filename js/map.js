@@ -1,7 +1,8 @@
 // Map page: full interactive map with search, filters, distances, rain, location and 360° walk-throughs.
 import { spots } from './spots.js';
 import { tours } from './tours.js';
-import { haversineKm, roadKm, shouldWarn, formatDuration, navLink } from './lib.js';
+import { views } from './views.js';
+import { haversineKm, roadKm, shouldWarn, formatDuration, navLink, embedUrl } from './lib.js';
 import { loadRain, rainWarning } from './rain.js';
 import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation } from './basemap.js';
 
@@ -29,7 +30,7 @@ capZoomOut();
 addEventListener('resize', capZoomOut);
 
 for (const s of spots) {
-  const m = L.marker([s.lat, s.lon], { icon: spotIcon(s, { has360: !!tours[s.id] }), title: s.name, riseOnHover: true }).addTo(map);
+  const m = L.marker([s.lat, s.lon], { icon: spotIcon(s, { has360: !!(tours[s.id] || views[s.id]) }), title: s.name, riseOnHover: true }).addTo(map);
   m.on('click', () => select(s));
   markers.set(s.id, m);
 }
@@ -54,7 +55,7 @@ function renderList() {
   $('count').textContent = `(${shown.length})`;
   $('list').innerHTML = shown.map(s => {
     const km = from && from.id !== s.id ? `${roadKm(haversineKm(from, s))} km` : '';
-    return `<li><button type="button" data-id="${s.id}" class="${s === selected ? 'on' : ''}"><span>${s.name}${tours[s.id] ? '<span class="badge360">360°</span>' : ''}</span><small>${km}</small></button></li>`;
+    return `<li><button type="button" data-id="${s.id}" class="${s === selected ? 'on' : ''}"><span>${s.name}${tours[s.id] || views[s.id] ? '<span class="badge360">360°</span>' : ''}</span><small>${km}</small></button></li>`;
   }).join('') || '<li class="meta">No spots match.</li>';
 }
 $('list').addEventListener('click', e => {
@@ -119,12 +120,12 @@ function renderDetail(s) {
       <div class="cta-row">
         ${km != null ? `<a class="btn-solid" target="_blank" rel="noopener" href="${navLink(me ? null : from, s)}">Navigate</a>
         <button class="btn-text" type="button" id="show-route">Preview route</button>` : ''}
-        ${tours[s.id] ? '<button class="btn-text" type="button" id="walk">Walk around in 360°</button>' : ''}
+        ${tours[s.id] || views[s.id] ? `<button class="btn-text" type="button" id="walk">${tours[s.id] || views[s.id].walk ? 'Walk around in 360°' : 'Look around in 360°'}</button>` : ''}
       </div>
     </div>`;
   $('close-detail').onclick = closeDetail;
   $('show-route')?.addEventListener('click', () => showRoute(from, s));
-  if (tours[s.id]) $('walk').onclick = () => openTour(s);
+  if (tours[s.id] || views[s.id]) $('walk').onclick = () => openTour(s);
   loadRain(s).then(sum => {
     if (selected !== s) return;
     $('rain-val').innerHTML = sum ? `${sum.todayMax}%${sum.todayMax >= 50 ? ' <small>bring an umbrella</small>' : ''}` : '<small>unavailable</small>';
@@ -193,6 +194,14 @@ function openTour(s) {
   lastFocus = document.activeElement;
   $('pano').hidden = false;
   $('pano-title').textContent = s.name;
+  if (!t) { // Google Maps 360° view (Street View or a visitor's photo); the photographer is credited inside it
+    const v = views[s.id];
+    $('pano-title').textContent = `${s.name} · ${v.walk ? 'click the arrows to walk' : 'drag to look around'}`;
+    $('pano-view').innerHTML = `<iframe src="${embedUrl(v)}" title="360° view of ${s.name}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+    $('pano-readout').hidden = true;
+    return $('pano-close').focus();
+  }
+  $('pano-readout').hidden = false;
   if (!window.pannellum) { closeTour(); return toast('The 360° viewer could not load. Check your internet and try again.'); }
   viewer = window.pannellum.viewer('pano-view', {
     default: { firstScene: t.firstScene, sceneFadeDuration: 600, autoLoad: true, compass: false },
@@ -210,6 +219,7 @@ function closeTour() {
   if ($('pano').hidden) return;
   clearInterval(readoutTimer);
   viewer?.destroy(); viewer = null;
+  $('pano-view').innerHTML = '';
   $('pano').hidden = true;
   lastFocus?.focus();
 }

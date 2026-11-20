@@ -9,7 +9,7 @@ An interactive tourism and cultural heritage map of Bohol, Philippines.
 - **Chance of rain** for each spot for the next 12 hours (Open-Meteo, no API key)
 - **My location (GPS, asked automatically when the site opens):** blue dot, nearest spots, distances from where you stand, and a warning when rain is likely near you in the next 3 hours. Your location stays in your browser.
 - **Directions:** each spot has *Show route* (road route, distance and drive time on the map, from GraphHopper, OpenStreetMap roads) and *Start navigation* (opens Google Maps for live turn-by-turn). Zoom in close to see real streets.
-- **360° walk-throughs:** walk around selected spots by clicking arrows between 360° photos (Pannellum). Baclayon Church has a demo walk with placeholder images.
+- **360° views:** 12 spots open a Google Maps 360° view inside the site (free embed, no key). 4 are walkable with arrows (Bilar forest, Loboc River, Bee Farm, Tagbilaran plaza); 8 are look-around visitor photos, credited inside each view. Your own walk-throughs in `js/tours.js` replace them (see TOURS.md).
 
 BSCS 3B — Bohol Island State University.
 

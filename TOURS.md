@@ -1,5 +1,7 @@
 # Adding your own 360° walk-through
 
+Right now 12 spots show a Google Maps 360° view (listed in `js/views.js`). A spot you add to `js/tours.js` uses your own photos instead. To get test images while you practise, run `python scripts/make-placeholders.py`.
+
 A walk-through is a list of **stops**. Each stop is one 360° photo. Arrows connect the stops, so users click to "walk" from one to the next.
 
 ## 1. Take the photos

@@ -80,3 +80,13 @@ export function navLink(from, to) {
   p.set('travelmode', 'driving');
   return 'https://www.google.com/maps/dir/?' + p;
 }
+
+// ---------- Google Maps 360° embeds (free, no key) ----------
+// Visitor photo ids must be wrapped (protobuf + url-safe base64, '.' padding) the way Google's own embed code does.
+const wrapPhotoId = id => btoa(String.fromCharCode(8, 10, 18, id.length) + id)
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '.');
+
+export function embedUrl({ kind, pano, lat, lon, heading = 0 }) {
+  const id = kind === 'photo' ? wrapPhotoId(pano) : pano;
+  return `https://www.google.com/maps/embed?pb=!4v1!6m8!1m7!1s${id}!2m2!1d${lat}!2d${lon}!3f${heading}!4f0!5f0.78`;
+}
