@@ -23,6 +23,10 @@ const showIsland = (animate = true) => map.fitBounds(islandBounds, {
   animate,
 });
 showIsland(false);
+// can't zoom out further than the whole island
+const capZoomOut = () => map.setMinZoom(map.getBoundsZoom(islandBounds) - 0.25);
+capZoomOut();
+addEventListener('resize', capZoomOut);
 
 for (const s of spots) {
   const m = L.marker([s.lat, s.lon], { icon: spotIcon(s, { has360: !!tours[s.id] }), title: s.name, riseOnHover: true }).addTo(map);

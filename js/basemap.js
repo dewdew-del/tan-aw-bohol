@@ -33,8 +33,8 @@ const SEAS = [['Bohol Sea', 9.38, 124.15], ['Camotes Sea', 10.32, 124.0], ['Boho
 
 export function createBoholMap(el, { interactive = true } = {}) {
   const map = L.map(el, {
-    zoomControl: false, zoomSnap: 0.25, minZoom: 8, maxZoom: 15,
-    maxBounds: [[9.1, 123.2], [10.5, 125]],
+    zoomControl: false, zoomSnap: 0.25, minZoom: 8, maxZoom: 17,
+    maxBounds: islandBounds.pad(0.25), maxBoundsViscosity: 1, // can't drag Bohol off screen
     dragging: interactive, scrollWheelZoom: interactive, doubleClickZoom: interactive,
     touchZoom: interactive, boxZoom: interactive, keyboard: interactive,
   });
