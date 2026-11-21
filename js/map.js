@@ -2,6 +2,7 @@
 import { spots } from './spots.js';
 import { tours } from './tours.js';
 import { views } from './views.js';
+import { history as spotHistory } from './history.js';
 import { haversineKm, roadKm, shouldWarn, formatDuration, navLink, embedUrl } from './lib.js';
 import { loadRain, rainWarning } from './rain.js';
 import { createBoholMap, islandBounds, spotIcon, meIcon, watchLocation } from './basemap.js';
@@ -122,6 +123,7 @@ function renderDetail(s) {
         <button class="btn-text" type="button" id="show-route">Preview route</button>` : ''}
         ${tours[s.id] || views[s.id] ? `<button class="btn-text" type="button" id="walk">${tours[s.id] || views[s.id].walk ? 'Walk around in 360°' : 'Look around in 360°'}</button>` : ''}
       </div>
+      ${spotHistory[s.id] ? `<details class="hist"><summary>History and name</summary><p>${spotHistory[s.id]}</p></details>` : ''}
     </div>`;
   $('close-detail').onclick = closeDetail;
   $('show-route')?.addEventListener('click', () => showRoute(from, s));
