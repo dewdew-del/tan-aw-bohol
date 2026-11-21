@@ -95,13 +95,16 @@ export function spotIcon(spot, { on = false, has360 = false } = {}) {
 export const meIcon = () => L.divIcon({ className: '', html: '<div class="me-dot"></div>', iconSize: [16, 16] });
 
 // Ask for the location as soon as the page opens; the browser shows its own permission prompt.
-export function watchLocation(onPos, onFail) {
+// Devices without GPS (most laptops) often fail high-accuracy requests even when location is allowed,
+// so on "unavailable" or "timeout" before the first fix, retry once in normal (Wi-Fi) accuracy.
+export function watchLocation(onPos, onFail, highAccuracy = true) {
   if (!('geolocation' in navigator)) return;
   let have = false;
   const id = navigator.geolocation.watchPosition(p => { have = true; onPos({ lat: p.coords.latitude, lon: p.coords.longitude }); }, err => {
     if (err.code === 3 && have) return; // brief GPS timeout after a fix: keep the last position
     navigator.geolocation.clearWatch(id);
+    if (err.code !== 1 && highAccuracy && !have) return watchLocation(onPos, onFail, false);
     onFail(err.code === 1 ? 'Location is off. Allow it in your browser settings to see where you are and rain near you.'
-      : 'Could not find your location. Turn on GPS and reload the page.');
-  }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
+      : 'Could not find your location. Check that location is turned on for your device (on Windows: Settings > Privacy & security > Location), then reload the page.');
+  }, { enableHighAccuracy: highAccuracy, maximumAge: 30000, timeout: highAccuracy ? 20000 : 30000 });
 }
