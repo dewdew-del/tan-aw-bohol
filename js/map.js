@@ -189,7 +189,18 @@ watchLocation(p => {
 
 // ---------- 360° walk-through ----------
 let viewer = null, readoutTimer = null, lastFocus = null;
-function openTour(s) {
+// Pannellum is only needed for your own walk-throughs (tours.js), so fetch it on first use instead of on every page load.
+let pannellumLoad = null;
+function loadPannellum() {
+  if (window.pannellum) return Promise.resolve();
+  return pannellumLoad ??= new Promise((ok, fail) => {
+    const base = 'https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum';
+    document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: base + '.css' }));
+    document.head.append(Object.assign(document.createElement('script'), { src: base + '.js', onload: ok,
+      onerror: () => { pannellumLoad = null; fail(); } })); // allow a retry on the next click
+  });
+}
+async function openTour(s) {
   const t = tours[s.id];
   lastFocus = document.activeElement;
   $('pano').hidden = false;
@@ -202,6 +213,8 @@ function openTour(s) {
     return $('pano-close').focus();
   }
   $('pano-readout').hidden = false;
+  await loadPannellum().catch(() => {});
+  if ($('pano').hidden) return; // closed while the viewer was loading
   if (!window.pannellum) { closeTour(); return toast('The 360° viewer could not load. Check your internet and try again.'); }
   viewer = window.pannellum.viewer('pano-view', {
     default: { firstScene: t.firstScene, sceneFadeDuration: 600, autoLoad: true, compass: false },
